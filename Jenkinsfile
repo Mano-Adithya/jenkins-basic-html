@@ -7,6 +7,11 @@ pipeline {
         AWS_DEFAULT_REGION = 'ap-south-1'
     }
 
+    tools {
+        // Define Maven installation configured in Jenkins
+        maven 'Maven'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -17,7 +22,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building...'
-                // Example: If using Maven for Java project
+                // Run Maven build using configured installation
                 sh "mvn clean package"
                 // Archive build artifact
                 archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
