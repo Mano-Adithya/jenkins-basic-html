@@ -8,25 +8,40 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build') {
             steps {
                 echo 'Building...'
-                sh "java --version"
-                sh "ls"
+                // Example: If using Maven for Java project
+                sh "mvn clean package"
+                // Archive build artifact
+                archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
             }
         }
         
-        stage('Deploy') {
+        stage('Deploy Source Artifact') {
             steps {
-                echo 'Deploying to S3...'
+                echo 'Archiving source code...'
+                archiveArtifacts artifacts: '**', allowEmptyArchive: true
+                // Optionally, you can also upload source artifacts to S3 or another storage
+                // Example: Upload source to S3
                 script {
-                    // Configuring AWS CLI using environment variables
-                    sh '''
-                        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-                        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-                        aws configure set region $AWS_DEFAULT_REGION
-                        aws s3 cp index.html s3://s3-jenkins-test
-                    '''
+                    sh "aws s3 cp . s3://s3-jenkins-test/source --recursive"
+                }
+            }
+        }
+
+        stage('Deploy Build Artifact') {
+            steps {
+                echo 'Deploying build artifact to S3...'
+                // Example: Deploying a Maven build artifact (JAR file) to S3
+                script {
+                    sh "aws s3 cp **/target/*.jar s3://s3-jenkins-test/build/"
                 }
             }
         }
