@@ -17,24 +17,35 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building...'
-                // Perform your build steps here if needed
                 sh 'echo "No build steps defined."'
             }
         }
 
-        stage('Deploy Source Artifact') {
+        stage('Package and Upload to S3') {
             steps {
-                echo 'Archiving source code...'
-                sh 'zip -r sourceArtif.zip . -x "*" -i "index.html" "README.md" "Jenkinsfile"'
-                sh 'aws s3 cp sourceArtif.zip s3://s3-jenkins-test/sourceArtif/sourceArtif.zip'
+                echo 'Packaging and uploading artifacts to S3...'
+                script {
+                    sh '''
+                    zip -r buildArtifact.zip . -x "*.git*"
+                    aws s3 cp buildArtifact.zip s3://s3-jenkins-test/buildArtif/buildArtifact.zip
+                    '''
+                }
             }
         }
 
-        stage('Deploy Build Artifact') {
+        stage('Deploy with CodeDeploy') {
             steps {
-                echo 'Deploying build artifact to S3...'
-                sh 'zip buildArtif.zip index.html'
-                sh 'aws s3 cp buildArtif.zip s3://s3-jenkins-test/buildArtif/buildArtif.zip'
+                echo 'Deploying with CodeDeploy...'
+                script {
+                    sh '''
+                    aws deploy create-deployment \
+                        --application-name jen-application \
+                        --deployment-group-name jen-grp \
+                        --deployment-config-name CodeDeployDefault.OneAtATime \
+                        --s3-location bucket=s3-jenkins-test,key=buildArtif/buildArtifact.zip,bundleType=zip \
+                        --region ap-south-1
+                    '''
+                }
             }
         }
     }
