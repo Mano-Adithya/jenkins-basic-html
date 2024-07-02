@@ -17,6 +17,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building...'
+                // Perform your build steps here if needed
                 sh 'echo "No build steps defined."'
             }
         }
@@ -32,9 +33,8 @@ pipeline {
         stage('Deploy Build Artifact') {
             steps {
                 echo 'Deploying build artifact to S3...'
-                script {
-                    sh 'aws s3 cp index.html s3://s3-jenkins-test/buildArtif/'
-                }
+                sh 'zip buildArtif.zip index.html'
+                sh 'aws s3 cp buildArtif.zip s3://s3-jenkins-test/buildArtif/buildArtif.zip'
             }
         }
     }
