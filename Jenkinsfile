@@ -24,10 +24,8 @@ pipeline {
         stage('Deploy Source Artifact') {
             steps {
                 echo 'Archiving source code...'
-                archiveArtifacts artifacts: '**', allowEmptyArchive: true
-                script {
-                    sh 'aws s3 cp . s3://s3-jenkins-test/sourceArtif --recursive --exclude "*" --include "index.html" --include "README.md" --include "Jenkinsfile"'
-                }
+                sh 'zip -r sourceArtif.zip . -x "*" -i "index.html" "README.md" "Jenkinsfile"'
+                sh 'aws s3 cp sourceArtif.zip s3://s3-jenkins-test/sourceArtif/sourceArtif.zip'
             }
         }
 
