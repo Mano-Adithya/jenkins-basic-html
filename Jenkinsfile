@@ -7,10 +7,6 @@ pipeline {
         AWS_DEFAULT_REGION = 'ap-south-1'
     }
 
-    tools {
-        maven 'Maven' // Ensure this matches the name given in the Jenkins Maven configuration
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -21,21 +17,19 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building...'
-                // Run Maven build using configured installation
-                sh 'mvn clean package'
-                // Archive build artifact
-                archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
+                // You can add any build steps here if necessary
+                sh 'echo "No build steps defined."'
             }
         }
-        
+
         stage('Deploy Source Artifact') {
             steps {
                 echo 'Archiving source code...'
                 // Archive the source code
                 archiveArtifacts artifacts: '**', allowEmptyArchive: true
-                // Upload source artifacts to S3
+                // Upload source artifacts to S3 under sourceArtif directory
                 script {
-                    sh 'aws s3 cp . s3://s3-jenkins-test/source --recursive'
+                    sh 'aws s3 cp . s3://s3-jenkins-test/sourceArtif --recursive --exclude "*" --include "index.html" --include "README.md" --include "Jenkinsfile"'
                 }
             }
         }
@@ -43,9 +37,9 @@ pipeline {
         stage('Deploy Build Artifact') {
             steps {
                 echo 'Deploying build artifact to S3...'
-                // Deploying a Maven build artifact (JAR file) to S3
+                // Deploy the files to S3 under buildArtif directory
                 script {
-                    sh 'aws s3 cp target/*.jar s3://s3-jenkins-test/build/'
+                    sh 'aws s3 cp index.html s3://s3-jenkins-test/buildArtif/'
                 }
             }
         }
