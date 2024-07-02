@@ -8,8 +8,7 @@ pipeline {
     }
 
     tools {
-        // Define Maven installation configured in Jenkins
-        maven 'Maven'
+        maven 'Maven' // Ensure this matches the name given in the Jenkins Maven configuration
     }
 
     stages {
@@ -23,7 +22,7 @@ pipeline {
             steps {
                 echo 'Building...'
                 // Run Maven build using configured installation
-                sh "mvn clean package"
+                sh 'mvn clean package'
                 // Archive build artifact
                 archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
             }
@@ -32,11 +31,11 @@ pipeline {
         stage('Deploy Source Artifact') {
             steps {
                 echo 'Archiving source code...'
+                // Archive the source code
                 archiveArtifacts artifacts: '**', allowEmptyArchive: true
-                // Optionally, you can also upload source artifacts to S3 or another storage
-                // Example: Upload source to S3
+                // Upload source artifacts to S3
                 script {
-                    sh "aws s3 cp . s3://s3-jenkins-test/source --recursive"
+                    sh 'aws s3 cp . s3://s3-jenkins-test/source --recursive'
                 }
             }
         }
@@ -44,9 +43,9 @@ pipeline {
         stage('Deploy Build Artifact') {
             steps {
                 echo 'Deploying build artifact to S3...'
-                // Example: Deploying a Maven build artifact (JAR file) to S3
+                // Deploying a Maven build artifact (JAR file) to S3
                 script {
-                    sh "aws s3 cp **/target/*.jar s3://s3-jenkins-test/build/"
+                    sh 'aws s3 cp target/*.jar s3://s3-jenkins-test/build/'
                 }
             }
         }
