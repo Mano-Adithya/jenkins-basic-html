@@ -7,6 +7,13 @@ pipeline {
         AWS_DEFAULT_REGION = 'ap-south-1'
     }
 
+    parameters {
+        string(name: 'APPLICATION_NAME', defaultValue: 'jen-application', description: 'Name of the CodeDeploy application')
+        string(name: 'DEPLOYMENT_GROUP_NAME', defaultValue: 'jen-grp', description: 'Name of the CodeDeploy deployment group')
+        string(name: 'S3_BUCKET_NAME', defaultValue: 's3-jenkins-test', description: 'S3 bucket name to store artifacts')
+        string(name: 'ARTIFACT_PATH', defaultValue: 'buildArtif/buildArtifact.zip', description: 'Path in S3 bucket to store artifact')
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -27,7 +34,7 @@ pipeline {
                 script {
                     sh '''
                     zip -r buildArtifact.zip . -x "*.git*"
-                    aws s3 cp buildArtifact.zip s3://s3-jenkins-test/buildArtif/buildArtifact.zip
+                    aws s3 cp buildArtifact.zip s3://${S3_BUCKET_NAME}/${ARTIFACT_PATH}
                     '''
                 }
             }
@@ -39,14 +46,25 @@ pipeline {
                 script {
                     sh '''
                     aws deploy create-deployment \
-                        --application-name jen-application \
-                        --deployment-group-name jen-grp \
+                        --application-name ${APPLICATION_NAME} \
+                        --deployment-group-name ${DEPLOYMENT_GROUP_NAME} \
                         --deployment-config-name CodeDeployDefault.OneAtATime \
-                        --s3-location bucket=s3-jenkins-test,key=buildArtif/buildArtifact.zip,bundleType=zip \
-                        --region ap-south-1
+                        --s3-location bucket=${S3_BUCKET_NAME},key=${ARTIFACT_PATH},bundleType=zip \
+                        --region ${AWS_DEFAULT_REGION}
                     '''
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment successful!'
+            // Add notifications or additional steps here
+        }
+        failure {
+            echo 'Deployment failed.'
+            // Add failure handling steps or notifications here
         }
     }
 }
